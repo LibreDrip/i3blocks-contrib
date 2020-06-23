@@ -1,0 +1,38 @@
+#!/usr/bin/sh
+#set -euo pipefail
+
+CARDNAME="Xonar"
+OUTPUTNAME='Analog Output'
+CARDS=$(cat /proc/asound/cards)
+CARDSTRING=$(cat /proc/asound/cards | grep "${CARDNAME}")
+
+SPEAKERSITEM='Stereo Headphones'
+HEADPHONESITEM='Stereo Headphones FP'
+
+HEADPHONES="  Item0: 'Stereo Headphones FP'"
+SPEAKERS="  Item0: 'Stereo Headphones'"
+
+# sometimes it's a different number on startup
+case $CARDSTRING in
+" 0 [DGX            ]: CMI8786 - Xonar DGX")
+CARDNUMBER=0 ;;
+" 1 [DGX            ]: CMI8786 - Xonar DGX")
+CARDNUMBER=1 ;;
+" 2 [DGX            ]: CMI8786 - Xonar DGX")
+CARDNUMBER=2 ;;
+" 3 [DGX            ]: CMI8786 - Xonar DGX")
+CARDNUMBER=3 ;;
+esac
+
+CURRENTOUTPUT="$(amixer -c $CARDNUMBER get "$OUTPUTNAME" | grep Item0:)"
+
+case $CURRENTOUTPUT in
+$SPEAKERS)
+echo "[+] Switching to Front-Panel/Headphones"
+amixer -c $CARDNUMBER set "$OUTPUTNAME" "$HEADPHONESITEM" > /dev/null && pkill -RTMIN+5 i3blocks 
+;;
+$HEADPHONES)
+echo "[+] Switching to Back-Panel/Speakers"
+amixer -c $CARDNUMBER set "$OUTPUTNAME" "$SPEAKERSITEM" > /dev/null && pkill -RTMIN+5 i3blocks
+;;
+esac
